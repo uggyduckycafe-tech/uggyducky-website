@@ -563,7 +563,6 @@
   ::selection{ background: var(--butter); color: var(--brown-ink); }
 </style>
 </head>
-   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XQ56R26W7S"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -940,7 +939,7 @@
       <p class="eyebrow">Give me bread</p>
       <h3 id="modal-title">Tell Emily<br/>what you're <em>craving.</em></h3>
       <p>One-baker turnaround. She replies personally — usually within a day.</p>
-      <form class="modal-form" action="https://formspree.io/f/xayvygzv" method="POST" id="bread-form" novalidate>
+      <form class="modal-form" action="https://formspree.io/f/xnjlegvb" method="POST" id="bread-form" novalidate>
         <input required type="text" name="name" placeholder="Your name" autocomplete="name" />
         <input required type="email" name="email" placeholder="Email" autocomplete="email" />
         <textarea name="craving" placeholder="What are you craving? (sourdough, butters, focaccia for a Sunday, a starter named Antony…)" rows="4"></textarea>
@@ -979,11 +978,34 @@
     modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      // Framer port: replace this block with a real form action.
-      formWrap.style.display = 'none';
-      thanks.style.display = '';
+      const submitBtn = form.querySelector('button[type=submit]');
+      const originalLabel = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json' },
+          body: new FormData(form),
+        });
+        if (!res.ok) throw new Error('Formspree responded ' + res.status);
+        formWrap.style.display = 'none';
+        thanks.style.display = '';
+      } catch (err) {
+        console.error('[bread-form] submit failed:', err);
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalLabel;
+        let errEl = form.querySelector('.form-error');
+        if (!errEl) {
+          errEl = document.createElement('p');
+          errEl.className = 'form-error';
+          errEl.style.cssText = 'color:#a33;font-size:14px;margin-top:8px;';
+          form.appendChild(errEl);
+        }
+        errEl.textContent = "Couldn't send right now. Please try again, or email hello@uglyduckling.co.";
+      }
     });
   })();
 </script>
